@@ -10,13 +10,13 @@ The workspace combines a static browser client, a Go API gateway, a Go catalog s
 
 ## What Runs Here
 
-| Component                                                 | Implementation              | Local port | Responsibility                                                                                                                                |
-| --------------------------------------------------------- | --------------------------- | ---------: | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Frontend](Renet_FrontEnd_Service/)                       | HTML, CSS, JavaScript       |   `5500`\* | Movie browsing, sign-in UI, recommendations, and playback controls. Calls the gateway on the current hostname at port `4001`.                 |
-| [API Gateway](RENET----API_GATEWAY/)                      | Go, Chi                     |     `4001` | Auth endpoints, Redis-backed sessions, credentialed CORS, and reverse proxies to the backend services.                                        |
-| [Catalog Service](Renet_CataLog_Service/)                 | Go, Gin, GORM               |     `3000` | Movie listing/search/details, history interactions, PostgreSQL access, Redis recommendation-cache invalidation, and OMDb metadata enrichment. |
-| [Recommendation Service](ReNet_Recommendation/)           | Python, FastAPI             |     `8000` | Hybrid movie recommendations using ALS, FAISS, LightGBM, PostgreSQL interactions, local model artifacts, and optional Redis caching.          |
-| [Movie Streaming Service](RENET-Movie_Streaming_Service/) | TypeScript, Express, FFmpeg |     `5000` | Movie-linked video uploads, HLS transcode jobs, availability checks, and static serving of generated streams.                                |
+| Component                                                                                      | Implementation              | Local port | Responsibility                                                                                                                                |
+| ---------------------------------------------------------------------------------------------- | --------------------------- | ---------: | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Frontend](Renet_FrontEnd_Service/)                                                            | HTML, CSS, JavaScript       |   `5500`\* | Movie browsing, sign-in UI, recommendations, and playback controls. Calls the gateway on the current hostname at port `4001`.                 |
+| [API Gateway](https://github.com/IamAbhinav01/RENET----API_GATEWAY/)                           | Go, Chi                     |     `4001` | Auth endpoints, Redis-backed sessions, credentialed CORS, and reverse proxies to the backend services.                                        |
+| [Catalog Service](https://github.com/IamAbhinav01/RENET---Catalog_Service/)                    | Go, Gin, GORM               |     `3000` | Movie listing/search/details, history interactions, PostgreSQL access, Redis recommendation-cache invalidation, and OMDb metadata enrichment. |
+| [Recommendation Service](https://github.com/IamAbhinav01/RENET---Movie-Recomendation-Backend/) | Python, FastAPI             |     `8000` | Hybrid movie recommendations using ALS, FAISS, LightGBM, PostgreSQL interactions, local model artifacts, and optional Redis caching.          |
+| [Movie Streaming Service](https://github.com/IamAbhinav01/RENET-Movie_Streaming_Service/)      | TypeScript, Express, FFmpeg |     `5000` | Movie-linked video uploads, HLS transcode jobs, availability checks, and static serving of generated streams.                                 |
 
 \* The frontend is a static site rather than a server that binds its own port. `5500` is the default frontend origin allowed by the recommendation and streaming services; serve the folder on that port for the default local CORS configuration.
 
@@ -24,9 +24,11 @@ The workspace combines a static browser client, a Go API gateway, a Go catalog s
 
 1. The browser calls the gateway at `http://<same-host>:4001`.
 2. The gateway handles `/api/v1/auth/*` itself and proxies service-prefixed requests after stripping the prefix:
-  - `/catalog/*` to `127.0.0.1:3000`
-  - `/recommend/*` to `127.0.0.1:8000`
-  - `/streaming/*` to `127.0.0.1:5000`
+
+- `/catalog/*` to `127.0.0.1:3000`
+- `/recommend/*` to `127.0.0.1:8000`
+- `/streaming/*` to `127.0.0.1:5000`
+
 3. The catalog and recommendation services use PostgreSQL for movie and interaction data. Catalog history writes invalidate matching recommendation cache keys in Redis.
 4. Uploads can include a catalog `movieId`. The streaming service stores the job-to-movie mapping locally, and the frontend checks mapped IDs before showing Play. Playback requests the mapped movie stream, not an arbitrary upload.
 5. The streaming service uses FFmpeg to create multi-resolution HLS playlists and fragmented MP4 segments, then serves them from its `/streams` route.
@@ -109,20 +111,20 @@ Serve `Renet_FrontEnd_Service/` over HTTP on port `5500` (for example, with VS C
 
 ## Main Routes
 
-| Gateway path                                              | Purpose                                                                                      |
-| --------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `/api/v1/auth/signup`, `/login`, `/me`, `/logout`         | Create account, establish/check session, and sign out.                                       |
-| `/catalog/api/movies?page=1&limit=20`                     | Paginated movie catalog.                                                                     |
-| `/catalog/api/movies/search?q=...`                        | Search catalog titles.                                                                       |
-| `/catalog/api/movies/:id` and `/catalog/api/movies/batch` | Movie lookup and batch lookup.                                                               |
-| `/catalog/api/history`                                    | Authenticated watch/rating history.                                                          |
-| `/recommend/api/recommend?movie_name=...&n=8`             | Public title-based recommendations; does not return a user's personalized feed.              |
-| `/recommend/api/user/recommend?n=8`                       | Session-authenticated personalized recommendations; the gateway forwards the session user ID.|
+| Gateway path                                              | Purpose                                                                                       |
+| --------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `/api/v1/auth/signup`, `/login`, `/me`, `/logout`         | Create account, establish/check session, and sign out.                                        |
+| `/catalog/api/movies?page=1&limit=20`                     | Paginated movie catalog.                                                                      |
+| `/catalog/api/movies/search?q=...`                        | Search catalog titles.                                                                        |
+| `/catalog/api/movies/:id` and `/catalog/api/movies/batch` | Movie lookup and batch lookup.                                                                |
+| `/catalog/api/history`                                    | Authenticated watch/rating history.                                                           |
+| `/recommend/api/recommend?movie_name=...&n=8`             | Public title-based recommendations; does not return a user's personalized feed.               |
+| `/recommend/api/user/recommend?n=8`                       | Session-authenticated personalized recommendations; the gateway forwards the session user ID. |
 | `POST /streaming/api/v1/videos/availability`              | Return the movie IDs that currently have a non-failed video job.                              |
 | `GET /streaming/api/v1/videos/movie/:movieId`             | Return the mapped HLS stream, or `202` while its first playable playlist is being prepared.   |
 | `POST /streaming/api/v1/videos/upload`                    | Upload a video; include multipart `movieId` to associate it with a catalog title.             |
-| `/streaming/api/v1/videos/status/:jobId`                  | Check an upload transcode job.                                                               |
-| `/streaming/streams/...`                                  | HLS master/variant playlists and segments.                                                   |
+| `/streaming/api/v1/videos/status/:jobId`                  | Check an upload transcode job.                                                                |
+| `/streaming/streams/...`                                  | HLS master/variant playlists and segments.                                                    |
 
 ## Current Behavior & Boundaries
 

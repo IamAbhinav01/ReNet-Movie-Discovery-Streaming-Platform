@@ -1,0 +1,59 @@
+name: Bi-Daily ReNet Retrain
+
+on:
+  schedule:
+    - cron: '30 22 */2 * *'  # Runs every 2 days at 4:00 AM IST (22:30 UTC)
+  workflow_dispatch:         # Allows manual trigger anytime from GitHub Actions UI
+
+permissions:
+  contents: write
+
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: iamabhinav01
+          POSTGRES_PASSWORD: 689643
+          POSTGRES_DB: renet
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Seed database with catalog & interaction data
+        env:
+          DB_URL: ${{ secrets.DB_URL || 'postgresql://iamabhinav01:689643@localhost:5432/renet' }}
+        run: python seed_db.py
+
+      - name: Run 3-stage hybrid retraining pipeline (ALS + Content/FAISS + LightGBM)
+        env:
+          DB_URL: ${{ secrets.DB_URL || 'postgresql://iamabhinav01:689643@localhost:5432/renet' }}
+        run: python -m app.services.retrainService
+
+      - name: Commit and push updated model artifacts
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git add app/artifacts/
+          git diff --staged --quiet || git commit -m "chore: auto-retrain models [skip ci]"
+          git push

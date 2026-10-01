@@ -1,0 +1,152 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 980" role="img" aria-labelledby="title desc">
+  <title id="title">ReNet service architecture</title>
+  <desc id="desc">The browser frontend calls a Go API gateway, which proxies to the catalog, recommendation, and streaming services. PostgreSQL, Redis, OMDb, recommendation artifacts, and generated HLS files support the services.</desc>
+  <defs>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#286b83"/></marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#19745b"/></marker>
+    <marker id="arrow-coral" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#d26b4c"/></marker>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="#d8ddd7" opacity=".55"/></pattern>
+    <style>
+      text { font-family: Inter, 'Segoe UI', Arial, sans-serif; fill: #202e2b; }
+      .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; fill: #19745b; }
+      .title { font-size: 34px; font-weight: 750; }
+      .subtitle { font-size: 15px; fill: #61716c; }
+      .node-title { font-size: 19px; font-weight: 700; }
+      .node-sub { font-size: 12px; font-weight: 700; letter-spacing: .8px; fill: #61716c; }
+      .body { font-size: 13px; fill: #52615c; }
+      .small { font-size: 11px; fill: #61716c; }
+      .route { font-size: 11px; font-weight: 700; fill: #286b83; }
+      .store-title { font-size: 14px; font-weight: 700; }
+      .store-copy { font-size: 11px; fill: #61716c; }
+      .card { fill: #fffefa; stroke: #d6ddd7; stroke-width: 1.5; }
+      .line-blue { fill: none; stroke: #286b83; stroke-width: 2.5; marker-end: url(#arrow-blue); }
+      .line-green { fill: none; stroke: #19745b; stroke-width: 2.25; marker-end: url(#arrow-green); }
+      .line-coral { fill: none; stroke: #d26b4c; stroke-width: 2.25; marker-end: url(#arrow-coral); }
+    </style>
+  </defs>
+
+  <rect width="1440" height="980" fill="#f4f3ed"/>
+  <rect width="1440" height="980" fill="url(#grid)"/>
+  <rect x="0" y="0" width="1440" height="8" fill="#19745b"/>
+
+  <text x="70" y="53" class="eyebrow">RENET  /  SYSTEM MAP</text>
+  <text x="70" y="100" class="title">A gateway-led movie platform</text>
+  <text x="70" y="130" class="subtitle">Five services, shared data infrastructure, and an HLS playback pipeline.</text>
+
+  <g transform="translate(1010 61)">
+    <path d="M0 0h34" stroke="#286b83" stroke-width="3"/><text x="44" y="4" class="small">HTTP / proxy</text>
+    <path d="M155 0h34" stroke="#19745b" stroke-width="3"/><text x="199" y="4" class="small">data / cache</text>
+    <path d="M310 0h34" stroke="#d26b4c" stroke-width="3"/><text x="354" y="4" class="small">external</text>
+  </g>
+
+  <!-- Client and gateway row -->
+  <path d="M360 270H510" class="line-blue"/>
+  <text x="397" y="252" class="route">REST + cookie credentials</text>
+
+  <rect x="70" y="190" width="290" height="160" rx="13" class="card"/>
+  <rect x="70" y="190" width="7" height="160" rx="3" fill="#e0b75d"/>
+  <text x="98" y="225" class="node-sub">CLIENT</text>
+  <text x="98" y="256" class="node-title">Browser frontend</text>
+  <text x="98" y="282" class="body">HTML · CSS · JavaScript</text>
+  <text x="98" y="306" class="body">Catalog, account, discovery, player</text>
+  <text x="98" y="331" class="small">Static origin · expected :5500</text>
+
+  <rect x="510" y="175" width="430" height="190" rx="13" class="card"/>
+  <rect x="510" y="175" width="7" height="190" rx="3" fill="#286b83"/>
+  <text x="540" y="211" class="node-sub">ENTRY POINT · :4001</text>
+  <text x="540" y="244" class="node-title">Go API Gateway</text>
+  <text x="540" y="272" class="body">Auth endpoints · Redis-backed sessions</text>
+  <text x="540" y="296" class="body">Credentialed CORS · reverse proxy</text>
+  <rect x="540" y="316" width="105" height="26" rx="5" fill="#e8f1f2"/><text x="553" y="333" class="small">/catalog/*</text>
+  <rect x="655" y="316" width="120" height="26" rx="5" fill="#e8f1f2"/><text x="669" y="333" class="small">/recommend/*</text>
+  <rect x="785" y="316" width="130" height="26" rx="5" fill="#e8f1f2"/><text x="799" y="333" class="small">/streaming/*</text>
+
+  <path d="M940 270H1075" class="line-green"/>
+  <text x="958" y="251" class="small">session store</text>
+  <rect x="1075" y="205" width="290" height="130" rx="13" class="card"/>
+  <rect x="1075" y="205" width="7" height="130" rx="3" fill="#19745b"/>
+  <text x="1103" y="239" class="node-sub">SHARED INFRASTRUCTURE</text>
+  <text x="1103" y="270" class="node-title">Redis</text>
+  <text x="1103" y="296" class="body">Gateway sessions · rec cache</text>
+  <text x="1103" y="317" class="small">Catalog invalidates rec keys</text>
+
+  <!-- Gateway fan-out -->
+  <path d="M605 365V410H255V470" class="line-blue"/>
+  <path d="M725 365V470" class="line-blue"/>
+  <path d="M845 365V410H1185V470" class="line-blue"/>
+  <text x="184" y="450" class="route">/catalog</text>
+  <text x="670" y="450" class="route">/recommend</text>
+  <text x="1136" y="450" class="route">/streaming</text>
+
+  <!-- Service row -->
+  <rect x="60" y="470" width="390" height="225" rx="13" class="card"/>
+  <rect x="60" y="470" width="7" height="225" rx="3" fill="#19745b"/>
+  <text x="88" y="507" class="node-sub">GO · GIN · :3000</text>
+  <text x="88" y="540" class="node-title">Catalog Service</text>
+  <text x="88" y="570" class="body">Movie list, search, details, batch lookup</text>
+  <text x="88" y="594" class="body">History writes · metadata enrichment</text>
+  <text x="88" y="618" class="body">PostgreSQL · Redis invalidation · OMDb</text>
+  <rect x="88" y="647" width="292" height="27" rx="5" fill="#edf4ef"/>
+  <text x="101" y="665" class="small">/api/movies · /api/history · /health</text>
+
+  <rect x="525" y="470" width="390" height="225" rx="13" class="card"/>
+  <rect x="525" y="470" width="7" height="225" rx="3" fill="#e0b75d"/>
+  <text x="553" y="507" class="node-sub">PYTHON · FASTAPI · :8000</text>
+  <text x="553" y="540" class="node-title">Recommendation Service</text>
+  <text x="553" y="570" class="body">ALS + FAISS candidate generation</text>
+  <text x="553" y="594" class="body">LightGBM ranking · watched-item filters</text>
+  <text x="553" y="618" class="body">PostgreSQL · Redis cache · local artifacts</text>
+  <rect x="553" y="647" width="292" height="27" rx="5" fill="#f7f1df"/>
+  <text x="566" y="665" class="small">/api/recommend</text>
+
+  <rect x="990" y="470" width="390" height="225" rx="13" class="card"/>
+  <rect x="990" y="470" width="7" height="225" rx="3" fill="#d26b4c"/>
+  <text x="1018" y="507" class="node-sub">NODE · EXPRESS · :5000</text>
+  <text x="1018" y="540" class="node-title">Movie Streaming Service</text>
+  <text x="1018" y="570" class="body">Upload and transcode jobs · FFmpeg</text>
+  <text x="1018" y="594" class="body">Multi-resolution HLS · fMP4 segments</text>
+  <text x="1018" y="618" class="body">Serves /streams and uploaded /videos</text>
+  <rect x="1018" y="647" width="320" height="27" rx="5" fill="#f8ece7"/>
+  <text x="1031" y="665" class="small">/api/v1/videos · /streams</text>
+
+  <!-- Data and external dependencies -->
+  <path d="M180 695V765H185V795" class="line-green"/>
+  <path d="M280 695V755H475V795" class="line-green"/>
+  <path d="M660 695V755H185V795" class="line-green"/>
+  <path d="M740 695V795" class="line-green"/>
+  <path d="M390 695V755H765V795" class="line-coral"/>
+  <path d="M1185 695V795" class="line-green"/>
+  <path d="M1055 795V740H850V695" class="line-green"/>
+
+  <rect x="60" y="795" width="250" height="120" rx="12" class="card"/>
+  <circle cx="88" cy="827" r="7" fill="#19745b"/>
+  <text x="105" y="832" class="store-title">PostgreSQL</text>
+  <text x="83" y="860" class="store-copy">Users · items · interactions</text>
+  <text x="83" y="882" class="store-copy">Gateway account data</text>
+
+  <rect x="350" y="795" width="250" height="120" rx="12" class="card"/>
+  <circle cx="378" cy="827" r="7" fill="#19745b"/>
+  <text x="395" y="832" class="store-title">Redis</text>
+  <text x="373" y="860" class="store-copy">Session records · rec cache</text>
+  <text x="373" y="882" class="store-copy">Cache invalidation keys</text>
+
+  <rect x="640" y="795" width="250" height="120" rx="12" class="card"/>
+  <circle cx="668" cy="827" r="7" fill="#d26b4c"/>
+  <text x="685" y="832" class="store-title">OMDb API</text>
+  <text x="663" y="860" class="store-copy">External poster / plot lookup</text>
+  <text x="663" y="882" class="store-copy">Used by catalog enrichment</text>
+
+  <rect x="930" y="795" width="250" height="120" rx="12" class="card"/>
+  <circle cx="958" cy="827" r="7" fill="#e0b75d"/>
+  <text x="975" y="832" class="store-title">Model artifacts</text>
+  <text x="953" y="860" class="store-copy">ALS · FAISS · LightGBM</text>
+  <text x="953" y="882" class="store-copy">Loaded from app/artifacts/</text>
+
+  <rect x="1220" y="795" width="160" height="120" rx="12" class="card"/>
+  <circle cx="1248" cy="827" r="7" fill="#286b83"/>
+  <text x="1265" y="832" class="store-title">HLS files</text>
+  <text x="1243" y="860" class="store-copy">Playlists</text>
+  <text x="1243" y="882" class="store-copy">fMP4 segments</text>
+
+  <text x="70" y="953" class="small">Routes and service boundaries reflect the current workspace configuration. Local files are not shown as replicated or cloud storage.</text>
+</svg>
